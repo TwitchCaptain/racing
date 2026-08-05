@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitch Captain - Bicycle Racing</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    
+    <!-- HUD -->
+    <div id="hud">
+      <div id="speed-display">
+        <span id="speed-value">0</span>
+        <span class="unit">KM/H</span>
+      </div>
+      <div id="lap-display">
+        <span id="lap-current">1</span> / <span id="lap-total">3</span>
+      </div>
+      <div id="position-display">
+        <span id="position-value">1</span><span class="unit">st</span>
+      </div>
+      <div id="time-display">
+        <span id="time-value">00:00.0</span>
+      </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <div class="start-content">
+        <h1 class="game-title">TWITCH CAPTAIN</h1>
+        <div class="subtitle">BICYCLE RACING</div>
+        <div class="controls-info">
+          <div class="control-row"><kbd>↑</kbd> / <kbd>W</kbd> <span>Pedal Forward</span></div>
+          <div class="control-row"><kbd>↓</kbd> / <kbd>S</kbd> <span>Brake / Reverse</span></div>
+          <div class="control-row"><kbd>←</kbd> / <kbd>A</kbd> <span>Steer Left</span></div>
+          <div class="control-row"><kbd>→</kbd> / <kbd>D</kbd> <span>Steer Right</span></div>
+          <div class="control-row"><kbd>Shift</kbd> <span>Sprint (Boost)</span></div>
+        </div>
+        <button id="start-btn" class="start-btn">PRESS TO RACE</button>
+        <div class="start-hint">Press <kbd>Enter</kbd> or click</div>
+      </div>
+    </div>
+
+    <!-- Finish Screen -->
+    <div id="finish-screen" class="hidden">
+      <div class="finish-content">
+        <h1 class="finish-title">RACE COMPLETE!</h1>
+        <div class="finish-time">
+          <span>YOUR TIME</span>
+          <span id="final-time">00:00.0</span>
+        </div>
+        <div class="finish-position">
+          <span>POSITION</span>
+          <span id="final-position">1st</span>
+        </div>
+        <button id="restart-btn" class="start-btn">RACE AGAIN</button>
+      </div>
+    </div>
+
+    <!-- Minimap -->
+    <div id="minimap">
+      <canvas id="minimap-canvas" width="120" height="120"></canvas>
+    </div>
+  </div>
+
+  <!-- Three.js from CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
