@@ -685,6 +685,7 @@ canvas.addEventListener('touchend', () => {
 // GAME LOGIC
 // ============================================================
 function startGame() {
+  console.log('startGame called, resetting lap to 1');
   state.started = true;
   state.finished = false;
   state.time = 0;
