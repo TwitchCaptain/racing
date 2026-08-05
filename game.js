@@ -899,9 +899,9 @@ function updateCamera() {
     return;
   }
 
-  // Follow camera: position behind the bike along the track direction
+  // Follow camera: position behind the bike (bike's +z is forward)
   const playerPos = playerBike.position;
-  let trackDir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+  let trackDir = new THREE.Vector3(0, 0, 1).applyQuaternion(playerBike.quaternion);
   
   // Guard against NaN quaternion
   if (isNaN(trackDir.x) || isNaN(trackDir.y) || isNaN(trackDir.z)) {
@@ -970,7 +970,7 @@ function updateMinimap() {
 
     ctx.strokeStyle = '#ff4488';
     ctx.lineWidth = 2;
-    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+    const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(playerBike.quaternion);
     ctx.beginPath();
     ctx.moveTo(px, py);
     ctx.lineTo(px + dir.x * 8, py - dir.z * 8);
@@ -1060,7 +1060,7 @@ function gameLoop(time) {
     // Emit particles at high speed
     if (state.speed > 30) {
       const pos = playerBike.position.clone();
-      const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+      const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(playerBike.quaternion);
       pos.add(dir.clone().multiplyScalar(-0.8));
       particles.emit(pos, 0x00ff88, 2, state.speed * 0.02);
     }
@@ -1132,7 +1132,7 @@ dbgAmbientInt.addEventListener('input', () => {
 dbgLogPos.addEventListener('click', () => {
   const pp = playerBike.position;
   const cp = camera.position;
-  let dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+  let dir = new THREE.Vector3(0, 0, 1).applyQuaternion(playerBike.quaternion);
   if (isNaN(dir.x)) dir.set(0, 0, 1);
   
   const q = playerBike.quaternion;
