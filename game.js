@@ -204,17 +204,16 @@ class TrackGenerator {
 
     roadGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     roadGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    roadGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     roadGeo.setIndex(indices);
     roadGeo.computeVertexNormals();
 
     const roadMat = new THREE.MeshStandardMaterial({
       color: 0x8899cc,
-      vertexColors: true,
       roughness: 0.8,
       metalness: 0.2,
       emissive: new THREE.Color(0x88aaff),
       emissiveIntensity: 0.5,
+      side: THREE.DoubleSide,
     });
     const road = new THREE.Mesh(roadGeo, roadMat);
     road.receiveShadow = true;
@@ -510,11 +509,12 @@ function buildBicycle() {
   post.position.set(0, 0.75, -0.3);
   group.add(post);
 
-  // Rear wheel group
+  // Rear wheel group — rotate 90° around Y so torus axis is X (vertical wheel)
   const wheelGroup1 = new THREE.Group();
   const wheelGeo = new THREE.TorusGeometry(0.35, 0.06, 8, 16);
   const wheel1 = new THREE.Mesh(wheelGeo, wheelMat);
   wheel1.castShadow = true;
+  wheel1.rotation.y = Math.PI / 2;
   wheelGroup1.add(wheel1);
 
   // Spokes
@@ -524,6 +524,7 @@ function buildBicycle() {
     const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.3, 3), spokeMat);
     spoke.position.set(Math.cos(angle) * 0.17, Math.sin(angle) * 0.17, 0);
     spoke.rotation.x = Math.PI / 2;
+    spoke.rotation.y = Math.PI / 2;
     spoke.lookAt(new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0));
     wheelGroup1.add(spoke);
   }
