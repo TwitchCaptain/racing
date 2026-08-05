@@ -220,49 +220,50 @@ class TrackGenerator {
     road.castShadow = true;
     scene.add(road);
 
-    // Terrain ring — wider ground that follows the track elevation
+    // Terrain — slopes from flat ground up to track elevation
     const terrainGeo = new THREE.BufferGeometry();
     const tVerts = [];
     const tIdx = [];
-    const terrainWidth = 20;
+    const terrainWidth = 30;
+    const groundY = -14;
     for (let i = 0; i < segments; i++) {
       const p1 = this.trackPoints[i];
       const p2 = this.trackPoints[(i + 1) % segments];
       const n1 = this.getNormal(i / segments);
       const n2 = this.getNormal((i + 1) / segments);
 
-      // Inner edge (at track center, slightly below track)
-      const inner1 = new THREE.Vector3().copy(p1);
-      inner1.y -= trackHeight + 0.3;
-      const inner2 = new THREE.Vector3().copy(p2);
-      inner2.y -= trackHeight + 0.3;
+      // Track center point (slightly below track surface)
+      const center1 = new THREE.Vector3().copy(p1);
+      center1.y -= trackHeight + 0.2;
+      const center2 = new THREE.Vector3().copy(p2);
+      center2.y -= trackHeight + 0.2;
 
-      // Outer edge (terrain width outward — away from track center)
+      // Outer edge (terrain width outward — away from track center, at ground level)
       const outer1 = new THREE.Vector3().copy(p1).add(n1.clone().multiplyScalar(terrainWidth));
-      outer1.y -= trackHeight + 0.3;
+      outer1.y = groundY;
       const outer2 = new THREE.Vector3().copy(p2).add(n2.clone().multiplyScalar(terrainWidth));
-      outer2.y -= trackHeight + 0.3;
+      outer2.y = groundY;
 
-      // Inner side (terrain width inward — toward track center)
+      // Inner side edge (terrain width inward — toward track center, at ground level)
       const innerSide1 = new THREE.Vector3().copy(p1).add(n1.clone().multiplyScalar(-terrainWidth));
-      innerSide1.y -= trackHeight + 0.3;
+      innerSide1.y = groundY;
       const innerSide2 = new THREE.Vector3().copy(p2).add(n2.clone().multiplyScalar(-terrainWidth));
-      innerSide2.y -= trackHeight + 0.3;
+      innerSide2.y = groundY;
 
       const base = tVerts.length / 3;
-      // Outer side quad
-      tVerts.push(inner1.x, inner1.y, inner1.z);
+      // Outer side quad (slopes from track level down to ground)
+      tVerts.push(center1.x, center1.y, center1.z);
       tVerts.push(outer1.x, outer1.y, outer1.z);
-      tVerts.push(inner2.x, inner2.y, inner2.z);
+      tVerts.push(center2.x, center2.y, center2.z);
       tVerts.push(outer2.x, outer2.y, outer2.z);
       tIdx.push(base, base + 1, base + 2);
       tIdx.push(base + 1, base + 3, base + 2);
 
-      // Inner side quad
+      // Inner side quad (slopes from track level down to ground)
       const base2 = tVerts.length / 3;
-      tVerts.push(inner1.x, inner1.y, inner1.z);
+      tVerts.push(center1.x, center1.y, center1.z);
       tVerts.push(innerSide1.x, innerSide1.y, innerSide1.z);
-      tVerts.push(inner2.x, inner2.y, inner2.z);
+      tVerts.push(center2.x, center2.y, center2.z);
       tVerts.push(innerSide2.x, innerSide2.y, innerSide2.z);
       tIdx.push(base2, base2 + 1, base2 + 2);
       tIdx.push(base2 + 1, base2 + 3, base2 + 2);
