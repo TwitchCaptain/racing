@@ -789,10 +789,10 @@ function updatePlayer(delta) {
     console.warn('Fixed NaN quaternion');
   }
 
-  // Wheel rotation
+  // Wheel rotation (negated for correct direction)
   const wheelRot = state.speed * dt * 5;
-  if (playerBike.userData.wheel1) playerBike.userData.wheel1.rotation.x += wheelRot;
-  if (playerBike.userData.wheel2) playerBike.userData.wheel2.rotation.x += wheelRot;
+  if (playerBike.userData.wheel1) playerBike.userData.wheel1.rotation.x -= wheelRot;
+  if (playerBike.userData.wheel2) playerBike.userData.wheel2.rotation.x -= wheelRot;
 
   // Boost glow
   const glowRing = playerBike.userData.glowRing;
