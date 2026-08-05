@@ -621,6 +621,14 @@ const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), beaconMat);
 beacon.position.set(0, 1.5, 0);
 playerBike.add(beacon);
 
+// TEST: bright red box at origin to verify rendering pipeline
+const testMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 1.0 });
+const testBox = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 5), testMat);
+testBox.position.set(0, 10, 0);
+testBox.castShadow = true;
+scene.add(testBox);
+console.log('Test box added at', testBox.position);
+
 // Ghost bike (visual best-lap replay - placeholder)
 const ghostBike = buildBicycle();
 ghostBike.scale.set(0.8, 0.8, 0.8);
@@ -790,6 +798,13 @@ function updatePlayer(delta) {
   const leanQuat = new THREE.Quaternion();
   leanQuat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), adjustedUp);
   targetQuat.multiply(leanQuat);
+
+  // Debug NaN trace
+  if (isNaN(targetQuat.x)) {
+    console.log('NaN trace:', { forward, adjustedUp, leanAngle, right, dir, pos, nextPos });
+    console.log('targetQuat before lean:', targetQuat);
+    console.log('leanQuat:', leanQuat);
+  }
 
   playerBike.quaternion.slerp(targetQuat, 0.3);
 
