@@ -192,8 +192,8 @@ class TrackGenerator {
       uvs.push(0, 0, 0, 1, 1, 0, 1, 1);
 
       const color = new THREE.Color(CONFIG.COLORS.TRACK);
-      const bright = 0.3 + (p1.y / 30) * 0.4;
-      color.multiplyScalar(Math.max(0.3, Math.min(1, bright)));
+      const bright = 0.6 + (p1.y / 30) * 0.4;
+      color.multiplyScalar(Math.max(0.6, Math.min(1, bright)));
       for (let c = 0; c < 4; c++) {
         colors.push(color.r, color.g, color.b);
       }
@@ -209,11 +209,12 @@ class TrackGenerator {
     roadGeo.computeVertexNormals();
 
     const roadMat = new THREE.MeshStandardMaterial({
+      color: 0x8899cc,
       vertexColors: true,
       roughness: 0.8,
       metalness: 0.2,
-      emissive: new THREE.Color(0x4466aa),
-      emissiveIntensity: 0.15,
+      emissive: new THREE.Color(0x88aaff),
+      emissiveIntensity: 0.5,
     });
     const road = new THREE.Mesh(roadGeo, roadMat);
     road.receiveShadow = true;
@@ -349,7 +350,7 @@ function generateScenery(scene, trackGen) {
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.5;
+  ground.position.y = -20;
   ground.receiveShadow = true;
   scene.add(ground);
 
@@ -608,44 +609,6 @@ playerBike.add(bikeLight);
 const startPos = trackGen.getPoint(0);
 playerBike.position.copy(startPos);
 playerBike.position.y += 0.5;
-
-// Add a giant beacon sphere at the bike's position for visibility debugging
-const beaconMat = new THREE.MeshStandardMaterial({
-  color: 0xff00ff,
-  emissive: 0xff00ff,
-  emissiveIntensity: 2.0,
-  transparent: true,
-  opacity: 0.6,
-});
-const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), beaconMat);
-beacon.position.set(0, 1.5, 0);
-playerBike.add(beacon);
-
-// TEST: bright red box at origin to verify rendering pipeline
-const testMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 1.0 });
-const testBox = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 5), testMat);
-testBox.position.set(0, 10, 0);
-testBox.castShadow = true;
-scene.add(testBox);
-console.log('Test box added at', testBox.position);
-
-// TEST: large bright cyan box at bike position (10 units)
-const bikeTestMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 2.0 });
-const bikeTestBox = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), bikeTestMat);
-bikeTestBox.position.copy(startPos);
-bikeTestBox.position.y += 5;
-bikeTestBox.castShadow = true;
-scene.add(bikeTestBox);
-console.log('Bike test box (10x10x10) added at', bikeTestBox.position);
-
-// TEST: large bright yellow box at camera look target (playerBike.position)
-const lookTestMat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2.0 });
-const lookTestBox = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 8), lookTestMat);
-lookTestBox.position.copy(startPos);
-lookTestBox.position.y += 0;
-lookTestBox.castShadow = true;
-scene.add(lookTestBox);
-console.log('Look test box added at', lookTestBox.position);
 
 // Ghost bike (visual best-lap replay - placeholder)
 const ghostBike = buildBicycle();
