@@ -355,7 +355,7 @@ function generateScenery(scene, trackGen) {
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -30;
+  ground.position.y = -15;
   ground.receiveShadow = true;
   scene.add(ground);
 
@@ -698,6 +698,11 @@ function startGame() {
 
   startScreen.classList.add('hidden');
   finishScreen.classList.add('hidden');
+
+  // Reset HUD displays
+  lapCurrentEl.textContent = state.lap;
+  timeEl.textContent = '00:00.0';
+  finalTimeEl.textContent = '';
 
   const pos = trackGen.getPoint(0);
   playerBike.position.copy(pos);
