@@ -233,10 +233,16 @@ class TrackGenerator {
       const center = new THREE.Vector3().copy(p);
       center.y -= trackHeight - 0.01;
 
+      // Direction of this track segment
+      const nextP = this.trackPoints[(i + 1) % segments];
+      const dir = new THREE.Vector3().subVectors(nextP, p).normalize();
+
       const lineGeo = new THREE.BoxGeometry(0.3, 0.05, 1.5);
       const line = new THREE.Mesh(lineGeo, lineMat);
       line.position.copy(center);
       line.position.y += 0.02;
+      // Align with track direction
+      line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
       scene.add(line);
     }
 
@@ -349,13 +355,13 @@ function generateScenery(scene, trackGen) {
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -20;
+  ground.position.y = -30;
   ground.receiveShadow = true;
   scene.add(ground);
 
   // Grid overlay for depth perception
   const gridHelper = new THREE.GridHelper(300, 30, 0x88bbdd, 0x446688);
-  gridHelper.position.y = -20;
+  gridHelper.position.y = -30;
   scene.add(gridHelper);
 
   // Trees
