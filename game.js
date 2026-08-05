@@ -629,6 +629,15 @@ testBox.castShadow = true;
 scene.add(testBox);
 console.log('Test box added at', testBox.position);
 
+// TEST: bright green box at bike position to see if bike-position rendering works
+const bikeTestMat = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.0 });
+const bikeTestBox = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), bikeTestMat);
+bikeTestBox.position.copy(startPos);
+bikeTestBox.position.y += 2;
+bikeTestBox.castShadow = true;
+scene.add(bikeTestBox);
+console.log('Bike test box added at', bikeTestBox.position);
+
 // Ghost bike (visual best-lap replay - placeholder)
 const ghostBike = buildBicycle();
 ghostBike.scale.set(0.8, 0.8, 0.8);
