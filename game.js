@@ -629,14 +629,23 @@ testBox.castShadow = true;
 scene.add(testBox);
 console.log('Test box added at', testBox.position);
 
-// TEST: bright green box at bike position to see if bike-position rendering works
-const bikeTestMat = new THREE.MeshStandardMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 1.0 });
-const bikeTestBox = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), bikeTestMat);
+// TEST: large bright cyan box at bike position (10 units)
+const bikeTestMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 2.0 });
+const bikeTestBox = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), bikeTestMat);
 bikeTestBox.position.copy(startPos);
-bikeTestBox.position.y += 2;
+bikeTestBox.position.y += 5;
 bikeTestBox.castShadow = true;
 scene.add(bikeTestBox);
-console.log('Bike test box added at', bikeTestBox.position);
+console.log('Bike test box (10x10x10) added at', bikeTestBox.position);
+
+// TEST: large bright yellow box at camera look target (playerBike.position)
+const lookTestMat = new THREE.MeshStandardMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 2.0 });
+const lookTestBox = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 8), lookTestMat);
+lookTestBox.position.copy(startPos);
+lookTestBox.position.y += 0;
+lookTestBox.castShadow = true;
+scene.add(lookTestBox);
+console.log('Look test box added at', lookTestBox.position);
 
 // Ghost bike (visual best-lap replay - placeholder)
 const ghostBike = buildBicycle();
@@ -739,6 +748,11 @@ function finishGame() {
 function updatePlayer(delta) {
   if (!state.started || state.finished) return;
 
+  // Force valid quaternion at start of every frame
+  if (isNaN(playerBike.quaternion.x)) {
+    playerBike.quaternion.set(0, 0, 0, 1);
+  }
+
   const dt = Math.min(delta, 0.05);
 
   // Boost
@@ -780,42 +794,37 @@ function updatePlayer(delta) {
   playerBike.position.add(lateralVec);
   playerBike.position.y += 0.5;
 
-  // Orient bike
+  // Orient bike using lookAt (robust, no NaN)
   const nextPos = trackGen.getPoint((state.position + 0.01) % 1);
   const dir = new THREE.Vector3().subVectors(nextPos, pos);
 
-  // Guard against zero-length direction (NaN quaternion)
+  // Guard against zero-length direction
   if (dir.lengthSq() > 0.0001) {
     dir.normalize();
   } else {
-    dir.set(0, 0, 1); // fallback forward
+    dir.set(0, 0, 1);
   }
 
-  const leanAngle = state.turn * 0.3;
-  const targetQuat = new THREE.Quaternion();
+  // Use lookAt: make +z point toward nextPos
+  const lookTarget = new THREE.Vector3().copy(pos).add(dir);
   const up = new THREE.Vector3(0, 1, 0);
-  const forward = dir.clone();
-  const right = new THREE.Vector3().crossVectors(forward, up).normalize();
-  const adjustedUp = new THREE.Vector3()
-    .lerp(up, right.clone().multiplyScalar(Math.sin(leanAngle)).add(up.clone().multiplyScalar(Math.cos(leanAngle))), 0.5)
-    .normalize();
+  const m = new THREE.Matrix4();
+  m.lookAt(lookTarget, pos, up);
+  const targetQuat = new THREE.Quaternion().setFromRotationMatrix(m);
 
-  // Use setFromUnitVectors to correctly orient the bike's +z along the track
-  targetQuat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
-
-  // Apply lean by rotating around the forward axis
-  const leanQuat = new THREE.Quaternion();
-  leanQuat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), adjustedUp);
+  // Apply lean by rotating around forward axis
+  const leanAngle = state.turn * 0.3;
+  const leanAxis = dir.clone();
+  const leanQuat = new THREE.Quaternion().setFromAxisAngle(leanAxis, leanAngle);
   targetQuat.multiply(leanQuat);
 
-  // Debug NaN trace
-  if (isNaN(targetQuat.x)) {
-    console.log('NaN trace:', { forward, adjustedUp, leanAngle, right, dir, pos, nextPos });
-    console.log('targetQuat before lean:', targetQuat);
-    console.log('leanQuat:', leanQuat);
-  }
-
   playerBike.quaternion.slerp(targetQuat, 0.3);
+
+  // Force valid quaternion (guard against NaN)
+  if (isNaN(playerBike.quaternion.x)) {
+    playerBike.quaternion.set(0, 0, 0, 1);
+    console.warn('Fixed NaN quaternion');
+  }
 
   // Wheel rotation
   const wheelRot = state.speed * dt * 5;
@@ -1041,6 +1050,12 @@ function gameLoop(time) {
   if (state.started && !state.finished) {
     state.time += delta;
     updatePlayer(delta);
+
+    // Extra safety: force valid quaternion
+    if (isNaN(playerBike.quaternion.x)) {
+      playerBike.quaternion.set(0, 0, 0, 1);
+      console.warn('Fixed NaN quaternion in gameLoop');
+    }
 
     // Emit particles at high speed
     if (state.speed > 30) {
