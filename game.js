@@ -220,6 +220,67 @@ class TrackGenerator {
     road.castShadow = true;
     scene.add(road);
 
+    // Terrain ring — wider ground that follows the track elevation
+    const terrainGeo = new THREE.BufferGeometry();
+    const tVerts = [];
+    const tIdx = [];
+    const terrainWidth = 20;
+    for (let i = 0; i < segments; i++) {
+      const p1 = this.trackPoints[i];
+      const p2 = this.trackPoints[(i + 1) % segments];
+      const n1 = this.getNormal(i / segments);
+      const n2 = this.getNormal((i + 1) / segments);
+
+      // Inner edge (at track center, slightly below track)
+      const inner1 = new THREE.Vector3().copy(p1);
+      inner1.y -= trackHeight + 0.3;
+      const inner2 = new THREE.Vector3().copy(p2);
+      inner2.y -= trackHeight + 0.3;
+
+      // Outer edge (terrain width outward — away from track center)
+      const outer1 = new THREE.Vector3().copy(p1).add(n1.clone().multiplyScalar(terrainWidth));
+      outer1.y -= trackHeight + 0.3;
+      const outer2 = new THREE.Vector3().copy(p2).add(n2.clone().multiplyScalar(terrainWidth));
+      outer2.y -= trackHeight + 0.3;
+
+      // Inner side (terrain width inward — toward track center)
+      const innerSide1 = new THREE.Vector3().copy(p1).add(n1.clone().multiplyScalar(-terrainWidth));
+      innerSide1.y -= trackHeight + 0.3;
+      const innerSide2 = new THREE.Vector3().copy(p2).add(n2.clone().multiplyScalar(-terrainWidth));
+      innerSide2.y -= trackHeight + 0.3;
+
+      const base = tVerts.length / 3;
+      // Outer side quad
+      tVerts.push(inner1.x, inner1.y, inner1.z);
+      tVerts.push(outer1.x, outer1.y, outer1.z);
+      tVerts.push(inner2.x, inner2.y, inner2.z);
+      tVerts.push(outer2.x, outer2.y, outer2.z);
+      tIdx.push(base, base + 1, base + 2);
+      tIdx.push(base + 1, base + 3, base + 2);
+
+      // Inner side quad
+      const base2 = tVerts.length / 3;
+      tVerts.push(inner1.x, inner1.y, inner1.z);
+      tVerts.push(innerSide1.x, innerSide1.y, innerSide1.z);
+      tVerts.push(inner2.x, inner2.y, inner2.z);
+      tVerts.push(innerSide2.x, innerSide2.y, innerSide2.z);
+      tIdx.push(base2, base2 + 1, base2 + 2);
+      tIdx.push(base2 + 1, base2 + 3, base2 + 2);
+    }
+    terrainGeo.setAttribute('position', new THREE.Float32BufferAttribute(tVerts, 3));
+    terrainGeo.setIndex(tIdx);
+    terrainGeo.computeVertexNormals();
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x887755,
+      roughness: 1,
+      flatShading: true,
+    });
+    const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+    terrain.receiveShadow = true;
+    terrain.castShadow = true;
+    scene.add(terrain);
+
     // Center line dashes
     const lineMat = new THREE.MeshStandardMaterial({
       color: CONFIG.COLORS.TRACK_LINE,
