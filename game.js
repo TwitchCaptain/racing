@@ -355,13 +355,13 @@ function generateScenery(scene, trackGen) {
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -15;
+  ground.position.y = -14;
   ground.receiveShadow = true;
   scene.add(ground);
 
   // Grid overlay for depth perception
   const gridHelper = new THREE.GridHelper(300, 30, 0x88bbdd, 0x446688);
-  gridHelper.position.y = -30;
+  gridHelper.position.y = -14;
   scene.add(gridHelper);
 
   // Trees
@@ -378,12 +378,12 @@ function generateScenery(scene, trackGen) {
 
     const height = 3 + Math.random() * 5;
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, height * 0.3, 6), trunkMat);
-    trunk.position.set(x, height * 0.15, z);
+    trunk.position.set(x, height * 0.15 - 15, z);
     trunk.castShadow = true;
     scene.add(trunk);
 
     const foliage = new THREE.Mesh(new THREE.SphereGeometry(1 + Math.random() * 1.5, 6, 6), treeMat);
-    foliage.position.set(x, height * 0.6, z);
+    foliage.position.set(x, height * 0.6 - 15, z);
     foliage.castShadow = true;
     scene.add(foliage);
   }
@@ -396,7 +396,7 @@ function generateScenery(scene, trackGen) {
     const x = Math.cos(angle) * dist;
     const z = Math.sin(angle) * dist;
     const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3 + Math.random() * 0.5), rockMat);
-    rock.position.set(x, 0, z);
+    rock.position.set(x, -15, z);
     rock.rotation.set(Math.random(), Math.random(), Math.random());
     rock.castShadow = true;
     scene.add(rock);
