@@ -14,12 +14,12 @@ const CONFIG = {
   TURN_SPEED: 2.5,
   FRICTION: 0.98,
   COLORS: {
-    TRACK: 0x444466,
-    TRACK_LINE: 0x88aaff,
-    GRASS: 0x44aa44,
-    SKY: 0x1a1a2e,
+    TRACK: 0x6677aa,
+    TRACK_LINE: 0x88ddff,
+    GRASS: 0x55cc55,
+    SKY: 0x88bbdd,
     BIKE: 0xff4488,
-    BIKE_WHEEL: 0x222233,
+    BIKE_WHEEL: 0x444466,
     BOOST_GLOW: 0x00ff88,
   }
 };
@@ -48,7 +48,7 @@ lapTotalEl.textContent = CONFIG.LAPS;
 // ============================================================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CONFIG.COLORS.SKY);
-scene.fog = new THREE.Fog(CONFIG.COLORS.SKY, 100, 300);
+scene.fog = new THREE.Fog(CONFIG.COLORS.SKY, 150, 400);
 
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
 const renderer = new THREE.WebGLRenderer({
@@ -66,10 +66,10 @@ renderer.toneMappingExposure = 1.2;
 // ============================================================
 // LIGHTING
 // ============================================================
-const ambientLight = new THREE.AmbientLight(0x222244, 0.5);
+const ambientLight = new THREE.AmbientLight(0x8888cc, 0.8);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
 directionalLight.position.set(50, 100, 30);
 directionalLight.castShadow = true;
 directionalLight.shadow.mapSize.width = 1024;
@@ -82,7 +82,7 @@ directionalLight.shadow.camera.top = 150;
 directionalLight.shadow.camera.bottom = -150;
 scene.add(directionalLight);
 
-const hemisphereLight = new THREE.HemisphereLight(0x4488ff, 0x002244, 0.6);
+const hemisphereLight = new THREE.HemisphereLight(0x88bbff, 0x448866, 0.8);
 scene.add(hemisphereLight);
 
 // ============================================================
@@ -212,6 +212,8 @@ class TrackGenerator {
       vertexColors: true,
       roughness: 0.8,
       metalness: 0.2,
+      emissive: new THREE.Color(0x4466aa),
+      emissiveIntensity: 0.15,
     });
     const road = new THREE.Mesh(roadGeo, roadMat);
     road.receiveShadow = true;
@@ -240,9 +242,9 @@ class TrackGenerator {
 
     // Barrier posts
     const barrierMat = new THREE.MeshStandardMaterial({
-      color: 0xff4444,
-      emissive: 0xff4444,
-      emissiveIntensity: 0.05,
+      color: 0xff6644,
+      emissive: 0xff6644,
+      emissiveIntensity: 0.3,
     });
 
     for (let i = 0; i < segments; i += 2) {
@@ -267,7 +269,7 @@ class TrackGenerator {
     const startMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       emissive: 0xffffff,
-      emissiveIntensity: 0.3,
+      emissiveIntensity: 1.0,
     });
     const startLine = new THREE.Mesh(
       new THREE.PlaneGeometry(this.trackWidth * 0.8, 0.5),
@@ -288,12 +290,62 @@ class TrackGenerator {
 // ============================================================
 // SCENERY GENERATION
 // ============================================================
+function generateSky(scene) {
+  // Stars
+  const starsGeo = new THREE.BufferGeometry();
+  const starPositions = [];
+  for (let i = 0; i < 2000; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 400 + Math.random() * 100;
+    starPositions.push(
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.cos(phi),
+      r * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+  starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+  const starsMat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.5,
+    transparent: true,
+    opacity: 0.6,
+  });
+  const stars = new THREE.Points(starsGeo, starsMat);
+  scene.add(stars);
+
+  // Moon
+  const moonMat = new THREE.MeshStandardMaterial({
+    color: 0xeeeeff,
+    emissive: 0xeeeeff,
+    emissiveIntensity: 0.3,
+  });
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 16), moonMat);
+  moon.position.set(80, 60, -120);
+  scene.add(moon);
+
+  // Glow around moon
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0x8888ff,
+    emissive: 0x8888ff,
+    emissiveIntensity: 0.2,
+    transparent: true,
+    opacity: 0.1,
+  });
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(12, 16, 16), glowMat);
+  glow.position.copy(moon.position);
+  scene.add(glow);
+}
+
 function generateScenery(scene, trackGen) {
-  // Ground plane
-  const groundGeo = new THREE.PlaneGeometry(400, 400);
+  // Ground plane with grid
+  const groundGeo = new THREE.PlaneGeometry(400, 400, 40, 40);
   const groundMat = new THREE.MeshStandardMaterial({
     color: CONFIG.COLORS.GRASS,
     roughness: 1,
+    emissive: CONFIG.COLORS.GRASS,
+    emissiveIntensity: 0.08,
+    wireframe: false,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
@@ -301,9 +353,14 @@ function generateScenery(scene, trackGen) {
   ground.receiveShadow = true;
   scene.add(ground);
 
+  // Grid overlay for depth perception
+  const gridHelper = new THREE.GridHelper(300, 30, 0x88bbdd, 0x446688);
+  gridHelper.position.y = -0.3;
+  scene.add(gridHelper);
+
   // Trees
-  const treeMat = new THREE.MeshStandardMaterial({ color: 0x338833, roughness: 0.9 });
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x664422, roughness: 1 });
+  const treeMat = new THREE.MeshStandardMaterial({ color: 0x44cc44, roughness: 0.9, emissive: 0x44cc44, emissiveIntensity: 0.05 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x886644, roughness: 1 });
 
   for (let i = 0; i < 120; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -326,7 +383,7 @@ function generateScenery(scene, trackGen) {
   }
 
   // Rocks
-  const rockMat = new THREE.MeshStandardMaterial({ color: 0x666677, roughness: 0.9 });
+  const rockMat = new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.9 });
   for (let i = 0; i < 50; i++) {
     const angle = Math.random() * Math.PI * 2;
     const dist = CONFIG.TRACK_RADIUS + 5 + Math.random() * 25;
@@ -340,11 +397,11 @@ function generateScenery(scene, trackGen) {
   }
 
   // Light poles
-  const poleMat = new THREE.MeshStandardMaterial({ color: 0x888899, roughness: 0.5, metalness: 0.5 });
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0xaaaacc, roughness: 0.5, metalness: 0.5 });
   const lightMat = new THREE.MeshStandardMaterial({
     color: 0xffffaa,
     emissive: 0xffffaa,
-    emissiveIntensity: 0.5,
+    emissiveIntensity: 1.0,
   });
 
   for (let i = 0; i < 40; i++) {
@@ -369,9 +426,9 @@ function generateScenery(scene, trackGen) {
   const cpMat = new THREE.MeshStandardMaterial({
     color: 0x00ff88,
     emissive: 0x00ff88,
-    emissiveIntensity: 0.2,
+    emissiveIntensity: 0.5,
     transparent: true,
-    opacity: 0.3,
+    opacity: 0.5,
   });
 
   for (let i = 0; i < 8; i++) {
@@ -398,17 +455,19 @@ function buildBicycle() {
     roughness: 0.3,
     metalness: 0.7,
     emissive: CONFIG.COLORS.BIKE,
-    emissiveIntensity: 0.05,
+    emissiveIntensity: 0.3,
   });
   const wheelMat = new THREE.MeshStandardMaterial({
     color: CONFIG.COLORS.BIKE_WHEEL,
     roughness: 0.8,
     metalness: 0.2,
+    emissive: CONFIG.COLORS.BIKE_WHEEL,
+    emissiveIntensity: 0.1,
   });
   const accentMat = new THREE.MeshStandardMaterial({
     color: 0x00ff88,
     emissive: 0x00ff88,
-    emissiveIntensity: 0.1,
+    emissiveIntensity: 0.5,
   });
 
   // Frame
@@ -534,6 +593,7 @@ const state = {
 // ============================================================
 const trackGen = new TrackGenerator();
 trackGen.buildTrackMesh(scene);
+generateSky(scene);
 generateScenery(scene, trackGen);
 
 const playerBike = buildBicycle();
@@ -754,7 +814,14 @@ function updatePlayer(delta) {
 function updateCamera() {
   if (!state.started) {
     const t = Date.now() / 1000;
-    camera.position.set(Math.cos(t * 0.1) * 30, 15 + Math.sin(t * 0.15) * 5, Math.sin(t * 0.1) * 30);
+    // Orbit around the track center at a distance that shows the whole track
+    const orbitRadius = 120;
+    const height = 40 + Math.sin(t * 0.2) * 10;
+    camera.position.set(
+      Math.cos(t * 0.08) * orbitRadius,
+      height,
+      Math.sin(t * 0.08) * orbitRadius
+    );
     camera.lookAt(0, 0, 0);
     return;
   }
