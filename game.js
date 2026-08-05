@@ -986,6 +986,128 @@ function gameLoop(time) {
 }
 
 // ============================================================
+// DEBUG PANEL
+// ============================================================
+const debugPanel = document.getElementById('debug-panel');
+const dbgCamDist = document.getElementById('dbg-cam-dist');
+const dbgCamHeight = document.getElementById('dbg-cam-height');
+const dbgCamFov = document.getElementById('dbg-cam-fov');
+const dbgLightInt = document.getElementById('dbg-light-int');
+const dbgAmbientInt = document.getElementById('dbg-ambient-int');
+const dbgLogPos = document.getElementById('dbg-log-pos');
+const dbgResetCam = document.getElementById('dbg-reset-cam');
+const dbgToggleCam = document.getElementById('dbg-toggle-cam');
+const dbgInfo = document.getElementById('dbg-info');
+
+let debugOrbitMode = false;
+let debugCamDist = 10;
+let debugCamHeight = 6;
+
+// Toggle debug panel with backtick key
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Backquote') {
+    debugPanel.classList.toggle('hidden');
+  }
+});
+
+// Debug slider handlers
+dbgCamDist.addEventListener('input', () => {
+  debugCamDist = parseFloat(dbgCamDist.value);
+  dbgInfo.textContent = `camDist=${debugCamDist} camH=${debugCamHeight}`;
+});
+
+dbgCamHeight.addEventListener('input', () => {
+  debugCamHeight = parseFloat(dbgCamHeight.value);
+  dbgInfo.textContent = `camDist=${debugCamDist} camH=${debugCamHeight}`;
+});
+
+dbgCamFov.addEventListener('input', () => {
+  const fov = parseFloat(dbgCamFov.value);
+  camera.fov = fov;
+  camera.updateProjectionMatrix();
+  dbgInfo.textContent = `FOV=${fov}`;
+});
+
+dbgLightInt.addEventListener('input', () => {
+  const val = parseFloat(dbgLightInt.value);
+  directionalLight.intensity = val;
+  dbgInfo.textContent = `light=${val}`;
+});
+
+dbgAmbientInt.addEventListener('input', () => {
+  const val = parseFloat(dbgAmbientInt.value);
+  ambientLight.intensity = val;
+  dbgInfo.textContent = `ambient=${val}`;
+});
+
+dbgLogPos.addEventListener('click', () => {
+  const pp = playerBike.position;
+  const cp = camera.position;
+  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+  dbgInfo.innerHTML = `bike: (${pp.x.toFixed(1)}, ${pp.y.toFixed(1)}, ${pp.z.toFixed(1)})<br>cam: (${cp.x.toFixed(1)}, ${cp.y.toFixed(1)}, ${cp.z.toFixed(1)})<br>dir: (${dir.x.toFixed(2)}, ${dir.y.toFixed(2)}, ${dir.z.toFixed(2)})<br>speed: ${Math.round(state.speed)} pos: ${state.position.toFixed(3)}`;
+  console.log('=== DEBUG ===');
+  console.log('Bike position:', pp);
+  console.log('Camera position:', cp);
+  console.log('Bike direction:', dir);
+  console.log('Bike quaternion:', playerBike.quaternion);
+  console.log('State:', state);
+});
+
+dbgResetCam.addEventListener('click', () => {
+  debugCamDist = 10;
+  debugCamHeight = 6;
+  dbgCamDist.value = '10';
+  dbgCamHeight.value = '6';
+  camera.fov = 70;
+  dbgCamFov.value = '70';
+  camera.updateProjectionMatrix();
+  dbgInfo.textContent = 'Camera reset';
+});
+
+dbgToggleCam.addEventListener('click', () => {
+  debugOrbitMode = !debugOrbitMode;
+  dbgInfo.textContent = debugOrbitMode ? 'Orbit mode ON' : 'Follow mode ON';
+});
+
+// Patch updateCamera to use debug values
+const _origUpdateCamera = updateCamera;
+updateCamera = function() {
+  if (!state.started) {
+    const t = Date.now() / 1000;
+    const orbitRadius = 120;
+    const height = 40 + Math.sin(t * 0.2) * 10;
+    camera.position.set(
+      Math.cos(t * 0.08) * orbitRadius,
+      height,
+      Math.sin(t * 0.08) * orbitRadius
+    );
+    camera.lookAt(0, 0, 0);
+    return;
+  }
+
+  if (debugOrbitMode) {
+    const t = Date.now() / 1000;
+    const orbitRadius = 120;
+    camera.position.set(
+      Math.cos(t * 0.08) * orbitRadius,
+      40,
+      Math.sin(t * 0.08) * orbitRadius
+    );
+    camera.lookAt(playerBike.position);
+    return;
+  }
+
+  // Use debug values for camera offset
+  const playerPos = playerBike.position;
+  const cameraOffset = new THREE.Vector3(0, debugCamHeight, -debugCamDist);
+  const offset = cameraOffset.clone().applyQuaternion(playerBike.quaternion);
+  const targetPos = playerPos.clone().add(offset);
+
+  camera.position.lerp(targetPos, 0.1);
+  camera.lookAt(playerPos);
+};
+
+// ============================================================
 // RESIZE
 // ============================================================
 window.addEventListener('resize', () => {
@@ -1006,3 +1128,4 @@ requestAnimationFrame(gameLoop);
 
 console.log('🏁 Twitch Captain Bicycle Racing loaded!');
 console.log('Controls: Arrow/WASD to move, Shift to boost');
+console.log('Press ` (backtick) to open debug panel');

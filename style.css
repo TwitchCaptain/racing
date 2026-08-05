@@ -296,6 +296,111 @@ html, body {
   height: 100%;
 }
 
+/* Debug Panel */
+#debug-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 280px;
+  background: rgba(0,0,0,0.85);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  z-index: 50;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+#debug-panel.hidden {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+.debug-header {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffaa00;
+  margin-bottom: 8px;
+  letter-spacing: 2px;
+}
+
+.debug-hint {
+  font-size: 10px;
+  color: #666;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.debug-section {
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.debug-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+#debug-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aaa;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+#debug-panel input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+#debug-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00ff88;
+  cursor: pointer;
+}
+
+.debug-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  color: #ccc;
+  cursor: pointer;
+  margin-right: 4px;
+  transition: background 0.2s;
+}
+
+.debug-btn:hover {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+.debug-info {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.4;
+  max-height: 60px;
+  overflow-y: auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .game-title { font-size: 36px; }

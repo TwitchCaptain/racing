@@ -67,6 +67,24 @@
     <div id="minimap">
       <canvas id="minimap-canvas" width="120" height="120"></canvas>
     </div>
+
+    <!-- Debug Panel (press ` to toggle) -->
+    <div id="debug-panel" class="hidden">
+      <div class="debug-header">DEBUG <span class="debug-hint">(press ` to toggle)</span></div>
+      <div class="debug-section">
+        <label>Camera Distance <input type="range" id="dbg-cam-dist" min="5" max="50" value="10" step="0.5"></label>
+        <label>Camera Height <input type="range" id="dbg-cam-height" min="1" max="30" value="6" step="0.5"></label>
+        <label>Camera FOV <input type="range" id="dbg-cam-fov" min="30" max="120" value="70" step="1"></label>
+        <label>Light Intensity <input type="range" id="dbg-light-int" min="0.1" max="5" value="2.0" step="0.1"></label>
+        <label>Ambient Intensity <input type="range" id="dbg-ambient-int" min="0.1" max="3" value="0.8" step="0.1"></label>
+      </div>
+      <div class="debug-section">
+        <button id="dbg-log-pos" class="debug-btn">Log Positions</button>
+        <button id="dbg-reset-cam" class="debug-btn">Reset Camera</button>
+        <button id="dbg-toggle-cam" class="debug-btn">Toggle Orbit/Follow</button>
+      </div>
+      <div id="dbg-info" class="debug-info"></div>
+    </div>
   </div>
 
   <!-- Three.js from CDN -->
