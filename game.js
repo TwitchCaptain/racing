@@ -765,7 +765,14 @@ function updatePlayer(delta) {
 
   // Orient bike
   const nextPos = trackGen.getPoint((state.position + 0.01) % 1);
-  const dir = new THREE.Vector3().subVectors(nextPos, pos).normalize();
+  const dir = new THREE.Vector3().subVectors(nextPos, pos);
+
+  // Guard against zero-length direction (NaN quaternion)
+  if (dir.lengthSq() > 0.0001) {
+    dir.normalize();
+  } else {
+    dir.set(0, 0, 1); // fallback forward
+  }
 
   const leanAngle = state.turn * 0.3;
   const targetQuat = new THREE.Quaternion();
@@ -776,7 +783,7 @@ function updatePlayer(delta) {
     .lerp(up, right.clone().multiplyScalar(Math.sin(leanAngle)).add(up.clone().multiplyScalar(Math.cos(leanAngle))), 0.5)
     .normalize();
 
-  // Fix: use setFromUnitVectors to correctly orient the bike's +z along the track
+  // Use setFromUnitVectors to correctly orient the bike's +z along the track
   targetQuat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
 
   // Apply lean by rotating around the forward axis
@@ -861,7 +868,15 @@ function updateCamera() {
 
   // Follow camera: position behind the bike along the track direction
   const playerPos = playerBike.position;
-  const trackDir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion).normalize();
+  let trackDir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+  
+  // Guard against NaN quaternion
+  if (isNaN(trackDir.x) || isNaN(trackDir.y) || isNaN(trackDir.z)) {
+    trackDir.set(0, 0, 1);
+  } else {
+    trackDir.normalize();
+  }
+  
   const behind = trackDir.clone().multiplyScalar(-debugCamDist);
   const targetPos = playerPos.clone().add(behind);
   targetPos.y += debugCamHeight;
@@ -1078,13 +1093,19 @@ dbgAmbientInt.addEventListener('input', () => {
 dbgLogPos.addEventListener('click', () => {
   const pp = playerBike.position;
   const cp = camera.position;
-  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
-  dbgInfo.innerHTML = `bike: (${pp.x.toFixed(1)}, ${pp.y.toFixed(1)}, ${pp.z.toFixed(1)})<br>cam: (${cp.x.toFixed(1)}, ${cp.y.toFixed(1)}, ${cp.z.toFixed(1)})<br>dir: (${dir.x.toFixed(2)}, ${dir.y.toFixed(2)}, ${dir.z.toFixed(2)})<br>speed: ${Math.round(state.speed)} pos: ${state.position.toFixed(3)}`;
+  let dir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion);
+  if (isNaN(dir.x)) dir.set(0, 0, 1);
+  
+  const q = playerBike.quaternion;
+  const qValid = !isNaN(q.x) && !isNaN(q.y) && !isNaN(q.z) && !isNaN(q.w);
+  
+  dbgInfo.innerHTML = `bike: (${pp.x.toFixed(1)}, ${pp.y.toFixed(1)}, ${pp.z.toFixed(1)})<br>cam: (${cp.x.toFixed(1)}, ${cp.y.toFixed(1)}, ${cp.z.toFixed(1)})<br>dir: (${dir.x.toFixed(2)}, ${dir.y.toFixed(2)}, ${dir.z.toFixed(2)})<br>qValid: ${qValid}<br>speed: ${Math.round(state.speed)} pos: ${state.position.toFixed(3)}`;
   console.log('=== DEBUG ===');
   console.log('Bike position:', pp);
   console.log('Camera position:', cp);
   console.log('Bike direction:', dir);
   console.log('Bike quaternion:', playerBike.quaternion);
+  console.log('Quaternion valid:', qValid);
   console.log('State:', state);
 });
 
