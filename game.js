@@ -355,7 +355,7 @@ function generateScenery(scene, trackGen) {
 
   // Grid overlay for depth perception
   const gridHelper = new THREE.GridHelper(300, 30, 0x88bbdd, 0x446688);
-  gridHelper.position.y = -0.3;
+  gridHelper.position.y = -20;
   scene.add(gridHelper);
 
   // Trees
