@@ -597,12 +597,29 @@ generateSky(scene);
 generateScenery(scene, trackGen);
 
 const playerBike = buildBicycle();
-playerBike.scale.set(0.8, 0.8, 0.8);
+playerBike.scale.set(2.0, 2.0, 2.0);
 scene.add(playerBike);
+
+// Add a bright point light at the bike for visibility
+const bikeLight = new THREE.PointLight(0xff4488, 2, 50);
+bikeLight.position.set(0, 2, 0);
+playerBike.add(bikeLight);
 
 const startPos = trackGen.getPoint(0);
 playerBike.position.copy(startPos);
 playerBike.position.y += 0.5;
+
+// Add a giant beacon sphere at the bike's position for visibility debugging
+const beaconMat = new THREE.MeshStandardMaterial({
+  color: 0xff00ff,
+  emissive: 0xff00ff,
+  emissiveIntensity: 2.0,
+  transparent: true,
+  opacity: 0.6,
+});
+const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), beaconMat);
+beacon.position.set(0, 1.5, 0);
+playerBike.add(beacon);
 
 // Ghost bike (visual best-lap replay - placeholder)
 const ghostBike = buildBicycle();
@@ -759,9 +776,14 @@ function updatePlayer(delta) {
     .lerp(up, right.clone().multiplyScalar(Math.sin(leanAngle)).add(up.clone().multiplyScalar(Math.cos(leanAngle))), 0.5)
     .normalize();
 
-  const m = new THREE.Matrix4();
-  m.lookAt(new THREE.Vector3(), forward, adjustedUp);
-  targetQuat.setFromRotationMatrix(m);
+  // Fix: use setFromUnitVectors to correctly orient the bike's +z along the track
+  targetQuat.setFromUnitVectors(new THREE.Vector3(0, 0, 1), forward);
+
+  // Apply lean by rotating around the forward axis
+  const leanQuat = new THREE.Quaternion();
+  leanQuat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), adjustedUp);
+  targetQuat.multiply(leanQuat);
+
   playerBike.quaternion.slerp(targetQuat, 0.3);
 
   // Wheel rotation
@@ -814,7 +836,6 @@ function updatePlayer(delta) {
 function updateCamera() {
   if (!state.started) {
     const t = Date.now() / 1000;
-    // Orbit around the track center at a distance that shows the whole track
     const orbitRadius = 120;
     const height = 40 + Math.sin(t * 0.2) * 10;
     camera.position.set(
@@ -826,10 +847,24 @@ function updateCamera() {
     return;
   }
 
+  if (debugOrbitMode) {
+    const t = Date.now() / 1000;
+    const orbitRadius = 120;
+    camera.position.set(
+      Math.cos(t * 0.08) * orbitRadius,
+      40,
+      Math.sin(t * 0.08) * orbitRadius
+    );
+    camera.lookAt(playerBike.position);
+    return;
+  }
+
+  // Follow camera: position behind the bike along the track direction
   const playerPos = playerBike.position;
-  const cameraOffset = new THREE.Vector3(0, 6, -10);
-  const offset = cameraOffset.clone().applyQuaternion(playerBike.quaternion);
-  const targetPos = playerPos.clone().add(offset);
+  const trackDir = new THREE.Vector3(0, 0, -1).applyQuaternion(playerBike.quaternion).normalize();
+  const behind = trackDir.clone().multiplyScalar(-debugCamDist);
+  const targetPos = playerPos.clone().add(behind);
+  targetPos.y += debugCamHeight;
 
   camera.position.lerp(targetPos, 0.1);
   camera.lookAt(playerPos);
@@ -1069,43 +1104,7 @@ dbgToggleCam.addEventListener('click', () => {
   dbgInfo.textContent = debugOrbitMode ? 'Orbit mode ON' : 'Follow mode ON';
 });
 
-// Patch updateCamera to use debug values
-const _origUpdateCamera = updateCamera;
-updateCamera = function() {
-  if (!state.started) {
-    const t = Date.now() / 1000;
-    const orbitRadius = 120;
-    const height = 40 + Math.sin(t * 0.2) * 10;
-    camera.position.set(
-      Math.cos(t * 0.08) * orbitRadius,
-      height,
-      Math.sin(t * 0.08) * orbitRadius
-    );
-    camera.lookAt(0, 0, 0);
-    return;
-  }
-
-  if (debugOrbitMode) {
-    const t = Date.now() / 1000;
-    const orbitRadius = 120;
-    camera.position.set(
-      Math.cos(t * 0.08) * orbitRadius,
-      40,
-      Math.sin(t * 0.08) * orbitRadius
-    );
-    camera.lookAt(playerBike.position);
-    return;
-  }
-
-  // Use debug values for camera offset
-  const playerPos = playerBike.position;
-  const cameraOffset = new THREE.Vector3(0, debugCamHeight, -debugCamDist);
-  const offset = cameraOffset.clone().applyQuaternion(playerBike.quaternion);
-  const targetPos = playerPos.clone().add(offset);
-
-  camera.position.lerp(targetPos, 0.1);
-  camera.lookAt(playerPos);
-};
+// No override needed — updateCamera() already uses debugOrbitMode + debugCamDist/Height
 
 // ============================================================
 // RESIZE
