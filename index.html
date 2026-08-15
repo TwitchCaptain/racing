@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Twitch Captain — a 3D low-poly bicycle racing game built with Three.js. Race a procedurally generated 3-lap circuit with boost, off-track penalties, and a countdown start.">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%81%3C/text%3E%3C/svg%3E">
   <title>Twitch Captain - Bicycle Racing</title>
   <link rel="stylesheet" href="style.css">
   <style>
@@ -22,8 +25,11 @@
       <div id="lap-display">
         <span id="lap-current">1</span> / <span id="lap-total">3</span>
       </div>
+      <div id="lap-progress">
+        <div id="lap-progress-fill"></div>
+      </div>
       <div id="position-display">
-        <span id="position-value">1</span><span class="unit">st</span>
+        <span id="position-value">1st</span>
       </div>
       <div id="time-display">
         <span id="time-value">00:00.0</span>
@@ -47,6 +53,11 @@
       </div>
     </div>
 
+    <!-- Countdown Overlay -->
+    <div id="countdown" class="hidden">
+      <span id="countdown-value">3</span>
+    </div>
+
     <!-- Finish Screen -->
     <div id="finish-screen" class="hidden">
       <div class="finish-content">
@@ -59,6 +70,11 @@
           <span>POSITION</span>
           <span id="final-position">1st</span>
         </div>
+        <div class="finish-best">
+          <span>BEST LAP</span>
+          <span id="final-best">--:--.-</span>
+        </div>
+        <ul id="final-splits"></ul>
         <button id="restart-btn" class="start-btn">RACE AGAIN</button>
       </div>
     </div>
@@ -84,6 +100,18 @@
         <button id="dbg-toggle-cam" class="debug-btn">Toggle Orbit/Follow</button>
       </div>
       <div id="dbg-info" class="debug-info"></div>
+    </div>
+
+    <!-- Touch Controls (mobile) -->
+    <div id="touch-controls" class="hidden">
+      <div class="touch-zone">
+        <button id="touch-left" class="touch-btn" aria-label="Steer left">◀</button>
+        <button id="touch-down" class="touch-btn" aria-label="Brake">▼</button>
+      </div>
+      <div class="touch-zone">
+        <button id="touch-up" class="touch-btn" aria-label="Pedal forward">▲</button>
+        <button id="touch-right" class="touch-btn" aria-label="Steer right">▶</button>
+      </div>
     </div>
   </div>
 
